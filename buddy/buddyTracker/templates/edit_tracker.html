@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Edit Tracker</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <div style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px;">
+        <label for="{{ form.name.id_for_label }}"><strong>Tracker Name:</strong></label>
+        {{ form.name }}
+        <p style="font-size: 0.9em; color: #555;">Enter the name of the tracker (e.g., Vaccination, Treatment)</p>
+    </div>
+
+    <h3>Form Options</h3>
+    <div id="form-options-container">
+        {% for option in tracker.options.all %}
+        <div class="form-option-group" style="position: relative; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px;">
+            <!-- Delete Button -->
+            <button type="button" onclick="removeOption(this)" 
+                    style="position: absolute; top: 8px; right: 8px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-weight: bold; line-height: 18px; text-align: center; cursor: pointer;">
+                ×
+            </button>
+
+            <label>Field Name:</label>
+            <input type="text" name="options[{{ forloop.counter0 }}][field_name]" value="{{ option.field_name }}" required>
+
+            <label>Field Type:</label>
+            <select name="options[{{ forloop.counter0 }}][field_type]" required>
+                <option value="CharField" {% if option.field_type == "CharField" %}selected{% endif %}>Text</option>
+                <option value="DateField" {% if option.field_type == "DateField" %}selected{% endif %}>Date</option>
+                <option value="FloatField" {% if option.field_type == "FloatField" %}selected{% endif %}>Decimal Number</option>
+                <option value="IntegerField" {% if option.field_type == "IntegerField" %}selected{% endif %}>Integer Number</option>
+                <option value="ImageField" {% if option.field_type == "ImageField" %}selected{% endif %}>Image</option>
+            </select>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" onclick="addTrackerColumn()">Add a Tracker Column</button>
+    <br><br>
+    <button type="submit" onclick="return confirm('Are you sure you want to save the changes?')">Save</button>
+    <a href="{% url 'trackers_list' tracker.pet.pet_id %}" class="btn">Cancel</a>
+</form>
+
+<script>
+    let optionIndex = Number("{{ tracker.options.count|default:0 }}");
+
+    function addTrackerColumn() {
+        const container = document.getElementById('form-options-container');
+        const div = document.createElement('div');
+        div.classList.add('form-option-group');
+        div.innerHTML = `
+            <div style="position: relative; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px;">
+                <span onclick="removeOption(this)" style="
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 20px;
+                    height: 20px;
+                    background-color: red;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    cursor: pointer;
+                    font-size: 14px;
+                " title="Remove">&times;</span>
+
+                <label>Field Name:</label>
+                <input type="text" name="options[${optionIndex}][field_name]" required>
+
+                <label>Field Type:</label>
+                <select name="options[${optionIndex}][field_type]" required>
+                    <option value="CharField">Text</option>
+                    <option value="DateField">Date</option>
+                    <option value="FloatField">Decimal Number</option>
+                    <option value="IntegerField">Integer Number</option>
+                    <option value="ImageField">Image</option>
+                </select>
+            </div>
+        `;
+        container.appendChild(div);
+        optionIndex++;
+    }
+
+    function removeOption(el) {
+        if (confirm("Are you sure you want to delete this field?")) {
+            el.closest(".form-option-group").remove();
+        }
+    }
+</script>
+{% endblock %}

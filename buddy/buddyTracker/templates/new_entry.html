@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 style="margin-bottom: 20px;">Add New Entry to {{ tracker.name }}</h1>
+
+<form method="POST" enctype="multipart/form-data" style="max-width: 600px; margin: 0 auto;">
+    {% csrf_token %}
+
+    {% for option in options %}
+        <div style="
+            position: relative;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        ">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">{{ option.field_name }}</label>
+            {% if option.field_type == "DateField" %}
+                <input type="date" name="{{ option.field_name }}" required
+                       style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+            {% elif option.field_type == "IntegerField" %}
+                <input type="number" name="{{ option.field_name }}" step="1" required
+                       style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+            {% elif option.field_type == "FloatField" %}
+                <input type="number" name="{{ option.field_name }}" step="0.01" required
+                       style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+            {% elif option.field_type == "ImageField" %}
+                <input type="file" name="{{ option.field_name }}" accept="image/*" required
+                       style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+            {% else %}
+                <input type="text" name="{{ option.field_name }}" required
+                       style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Add Entry</button>
+</form>
+{% endblock %}

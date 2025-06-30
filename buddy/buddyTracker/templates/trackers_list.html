@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Trackers for {{ pet.name }}</h1>
+
+<!-- Tracker Grid -->
+<div style="display: grid; grid-template-columns: 1fr 150px; gap: 10px;">
+    {% for tracker in trackers %}
+        <div>
+            <a href="{% url 'tracker_entries' tracker.id %}">{{ tracker.name }}</a>
+        </div>
+        <div>
+            <a href="{% url 'edit_tracker' tracker.id %}">
+                <button type="button">Edit</button>
+            </a>
+            <button onclick="confirmDelete('{{ tracker.id }}')">Delete</button>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Add New Tracker -->
+<br>
+<a href="{% url 'new_tracker' pet.pet_id %}" class="btn">Add New Tracker</a>
+
+<!-- JS for Delete Confirmation -->
+<script>
+function confirmDelete(trackerId) {
+    if (confirm("Are you sure you want to delete this tracker? This cannot be reversed.")) {
+        fetch(`/api/trackerlists/${trackerId}/`, {
+            method: "DELETE"
+        })
+        .then(response => {
+            if (response.status === 204) {
+                alert("Tracker deleted.");
+                location.reload();
+            } else {
+                alert("Failed to delete tracker.");
+            }
+        })
+        .catch(error => alert("Error deleting tracker."));
+    }
+}
+</script>
+{% endblock %}

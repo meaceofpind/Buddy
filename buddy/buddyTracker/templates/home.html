@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1>Pet List</h1>
+
+<!-- Pet Grid -->
+<div style="display: grid; grid-template-columns: 1fr 150px; gap: 10px;">
+    {% for pet in pets %}
+        <div>
+            <a href="{% url 'trackers_list' pet.pet_id %}">{{ pet.name }}</a>
+        </div>
+        <div>
+            <button onclick="openEditModal('{{ pet.pet_id }}')">Edit</button>
+            <button onclick="confirmDelete('{{ pet.pet_id }}')">Delete</button>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Add Pet Button -->
+<br>
+<button id="addPetBtn">Add New Pet</button>
+
+<!-- Add Pet Modal -->
+<div id="petModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px;">
+    <h2>Add a New Pet</h2>
+    <form id="addPetForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+        </select><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" required><br>
+
+        <label for="species">Species:</label>
+        <select id="species" name="species">
+            <option value="Dog">Dog</option>
+            <option value="Cat">Cat</option>
+        </select><br>
+
+        <label for="breed">Breed:</label>
+        <input type="text" id="breed" name="breed" required><br>
+
+        <button type="submit">Save</button>
+        <button type="button" id="closeModal">Cancel</button>
+    </form>
+</div>
+
+<!-- Edit Pet Modal -->
+<div id="editPetModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 5px;">
+    <h2>Edit Pet</h2>
+    <form id="editPetForm">
+        <input type="hidden" id="edit_pet_id">
+
+        <label for="edit_name">Name:</label>
+        <input type="text" id="edit_name" name="name" required><br>
+
+        <label for="edit_gender">Gender:</label>
+        <select id="edit_gender" name="gender">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+        </select><br>
+
+        <label for="edit_age">Age:</label>
+        <input type="number" id="edit_age" name="age" required><br>
+
+        <label for="edit_species">Species:</label>
+        <select id="edit_species" name="species">
+            <option value="Dog">Dog</option>
+            <option value="Cat">Cat</option>
+        </select><br>
+
+        <label for="edit_breed">Breed:</label>
+        <input type="text" id="edit_breed" name="breed" required><br>
+
+        <button type="submit">Save Changes</button>
+        <button type="button" onclick="document.getElementById('editPetModal').style.display='none'">Cancel</button>
+    </form>
+</div>
+
+<!-- JavaScript for Modals and AJAX -->
+<script>
+document.getElementById("addPetBtn").addEventListener("click", function() {
+    document.getElementById("petModal").style.display = "block";
+});
+
+document.getElementById("closeModal").addEventListener("click", function() {
+    document.getElementById("petModal").style.display = "none";
+});
+
+document.getElementById("addPetForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    let formData = {
+        name: document.getElementById("name").value,
+        gender: document.getElementById("gender").value,
+        age: document.getElementById("age").value,
+        species: document.getElementById("species").value,
+        breed: document.getElementById("breed").value
+    };
+
+    fetch("/api/pets/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert("Pet added successfully!");
+        location.reload();
+    })
+    .catch(error => alert("Error adding pet"));
+});
+
+function confirmDelete(petId) {
+    if (confirm("Are you sure you want to delete this pet? This cannot be reversed.")) {
+        fetch(`/api/pets/${petId}/`, {
+            method: "DELETE"
+        })
+        .then(response => {
+            if (response.status === 204) {
+                alert("Pet deleted.");
+                location.reload();
+            } else {
+                alert("Failed to delete pet.");
+            }
+        })
+        .catch(error => alert("Error deleting pet"));
+    }
+}
+
+function openEditModal(petId) {
+    fetch(`/api/pets/${petId}/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("edit_pet_id").value = petId;
+            document.getElementById("edit_name").value = data.name;
+            document.getElementById("edit_gender").value = data.gender;
+            document.getElementById("edit_age").value = data.age;
+            document.getElementById("edit_species").value = data.species;
+            document.getElementById("edit_breed").value = data.breed;
+
+            document.getElementById("editPetModal").style.display = "block";
+        })
+        .catch(error => alert("Failed to fetch pet details."));
+}
+
+document.getElementById("editPetForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const petId = document.getElementById("edit_pet_id").value;
+    const formData = {
+        name: document.getElementById("edit_name").value,
+        gender: document.getElementById("edit_gender").value,
+        age: document.getElementById("edit_age").value,
+        species: document.getElementById("edit_species").value,
+        breed: document.getElementById("edit_breed").value
+    };
+
+    fetch(`/api/pets/${petId}/`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("Pet updated successfully!");
+            location.reload();
+        } else {
+            alert("Error updating pet.");
+        }
+    })
+    .catch(error => alert("Error sending update request."));
+});
+</script>
+{% endblock %}
